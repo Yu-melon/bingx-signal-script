@@ -1,4 +1,5 @@
+flask
 ccxt
-pandas
 talib
+pandas
 python-telegram-bot
