@@ -1,8 +1,10 @@
 name: Run BingX Signal Script Hourly
 
 on:
+  workflow_dispatch: # 允許手動觸發
   schedule:
-    - cron: '0 * * * *'  # 每小時執行一次（UTC 時間）
+    - cron: '0 * * * *' # 每小時執行一次 (UTC 時間)
+
   workflow_dispatch:     # 手動觸發條件
 
 jobs:
