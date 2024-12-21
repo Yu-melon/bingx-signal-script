@@ -1,0 +1,1 @@
+# bingx-signal-script2
