@@ -1,5 +1,5 @@
-flask
-ccxt
-talib
+pandas-ta
 pandas
+ccxt
 python-telegram-bot
+flask
