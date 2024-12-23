@@ -71,9 +71,25 @@ def generate_signal(row):
         print(f"生成信號失敗: {e}")
         return None
 
-# 分段發送訊息
-def split_message(message, max_length=4096):
-    return [message[i:i+max_length] for i in range(0, len(message), max_length)]
+# 格式化結果
+def format_results(results):
+    message = ""
+    for signal_type, entries in results.items():
+        message += f"\n{signal_type} 信號:\n"
+        for entry in entries:
+            message += (
+                f"交易對: {entry['交易對']}\n"
+                "------------------------\n"
+                f"RSI: {entry['RSI']}\n"
+                f"EMA 短期: {entry['EMA_short']}\n"
+                f"EMA 長期: {entry['EMA_long']}\n"
+                f"MACD: {entry['MACD']}\n"
+                f"MACD 信號線: {entry['MACD_signal']}\n"
+                f"收盤價: {entry['close']}\n"
+                "------------------------\n"
+            )
+    return message
+
 
 # 發送訊息到 Telegram（異步）
 async def send_to_telegram(message):
@@ -81,25 +97,10 @@ async def send_to_telegram(message):
     TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
     bot = Bot(token=TELEGRAM_API_TOKEN)
     try:
-        messages = split_message(message)
-        for part in messages:
-            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=part)
-        print("訊息已成功發送至 Telegram。")
-    except Exception as e:
-        print(f"Telegram 傳送失敗: {e}")
-
-
-
-
-
-# 發送訊息到 Telegram（異步）
-async def send_to_telegram(messages):
-    TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")  # 替換為 Telegram Bot API Token
-    TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")      # 替換為 Telegram Chat ID
-    bot = Bot(token=TELEGRAM_API_TOKEN)
-    try:
-        for message in messages:
-        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        # 將訊息分段以避免超過 Telegram 的字符限制
+        max_length = 4096  # Telegram 單條訊息最大字符數
+        for i in range(0, len(message), max_length):
+            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message[i:i+max_length])
         print("訊息已成功發送至 Telegram。")
     except Exception as e:
         print(f"Telegram 傳送失敗: {e}")
@@ -143,34 +144,11 @@ def main():
                             "close": latest["close"],
                         })
 
-    # 格式化訊息
-    message = "合約信號（所有結果）：\n\n"
-    for signal_type, entries in results.items():
-        message += f"{signal_type} 信號:\n\n"
-        for entry in entries:
-            message += (
-                f"交易對: {entry['symbol']}\n"
-                f"------------------------\n"
-                f"RSI: {entry['RSI']:.2f}\n"
-                f"EMA 短期: {entry['EMA_short']:.2f}\n"
-                f"EMA 長期: {entry['EMA_long']:.2f}\n"
-                f"MACD: {entry['MACD']:.2f}\n"
-                f"MACD 信號線: {entry['MACD_signal']:.2f}\n"
-                f"收盤價: {entry['close']:.2f}\n"
-                f"------------------------\n"
-            )
-
-    message += "\n篩選條件參數：\n"
-    message += (
-        "    - RSI 時間週期: 7\n"
-        "    - EMA 短期: 5\n"
-        "    - EMA 長期: 15\n"
-        "    - MACD 快線: 12\n"
-        "    - MACD 慢線: 26\n"
-        "    - MACD 信號線: 9\n"
+        # 格式化結果
+        contract_message = "合約信號（所有結果）：\n" + format_results(contract_results)
 
         # 發送到 Telegram
-        asyncio.run(send_to_telegram(contract_messages))
+        asyncio.run(send_to_telegram(contract_message))
 
 if __name__ == "__main__":
     main()
