@@ -51,8 +51,6 @@ def calculate_indicators(df):
         df["MACD"] = macd["MACD_12_26_9"]
         df["MACD_signal"] = macd["MACDs_12_26_9"]
         df["MACD_hist"] = macd["MACDh_12_26_9"]
-        # SAR 指標部分已註解，因為 pandas_ta 不支持 SAR
-        # df["SAR"] = ta.sar(df["high"], df["low"], acceleration=0.02, maximum=0.2)
         return df
     except Exception as e:
         print(f"計算技術指標失敗: {e}")
@@ -63,11 +61,11 @@ def generate_signal(row):
     try:
         if (row["RSI"] < 50 and
             row["EMA_short"] > row["EMA_long"] and
-            row["MACD"] > row["MACD_signal"]):  # SAR 已移除
+            row["MACD"] > row["MACD_signal"]):
             return "多方"
         elif (row["RSI"] > 50 and
               row["EMA_short"] < row["EMA_long"] and
-              row["MACD"] < row["MACD_signal"]):  # SAR 已移除
+              row["MACD"] < row["MACD_signal"]):
             return "空方"
         else:
             return None
@@ -101,17 +99,26 @@ def main():
         print("BingX 初始化失敗，請檢查 API 配置或網路連線。")
         return
 
+    results = []
     symbols = [symbol for symbol in exchange.symbols if "/USDT" in symbol]
-    for symbol in symbols[:5]:  # 測試抓取前 5 個交易對
+    for symbol in symbols:  # 遍歷所有交易對
         df = fetch_data(exchange, symbol)
         if df is not None:
             df = calculate_indicators(df)
             if df is not None:
-                print(f"成功處理 {symbol} 的技術指標！")
-    
-    # 測試 Telegram
-    test_message = "測試訊息：BingX 初始化成功，Telegram 測試開始。"
-    asyncio.run(send_to_telegram(test_message))
+                last_row = df.iloc[-1]  # 取最後一筆資料
+                signal = generate_signal(last_row)
+                if signal:
+                    result = f"交易對: {symbol}, 信號: {signal}, 收盤價: {last_row['close']:.2f}"
+                    print(result)
+                    results.append(result)
+
+    # 發送結果到 Telegram
+    if results:
+        message = "\n".join(results)
+    else:
+        message = "未生成任何有效信號。"
+    asyncio.run(send_to_telegram(message))
 
 if __name__ == "__main__":
     main()
