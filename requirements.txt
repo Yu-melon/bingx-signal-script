@@ -1,5 +1,6 @@
-pandas-ta==0.3.14b0
+numpy==1.23.5
 pandas==1.5.3
+pandas-ta==0.3.14b0
 ccxt
 python-telegram-bot==20.3
 flask==2.3.2
