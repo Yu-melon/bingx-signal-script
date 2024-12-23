@@ -51,7 +51,8 @@ def calculate_indicators(df):
         df["MACD"] = macd["MACD_12_26_9"]
         df["MACD_signal"] = macd["MACDs_12_26_9"]
         df["MACD_hist"] = macd["MACDh_12_26_9"]
-        df["SAR"] = ta.sar(df["high"], df["low"], acceleration=0.02, maximum=0.2)
+        # SAR 指標部分已註解，因為 pandas_ta 不支持 SAR
+        # df["SAR"] = ta.sar(df["high"], df["low"], acceleration=0.02, maximum=0.2)
         return df
     except Exception as e:
         print(f"計算技術指標失敗: {e}")
@@ -62,13 +63,11 @@ def generate_signal(row):
     try:
         if (row["RSI"] < 50 and
             row["EMA_short"] > row["EMA_long"] and
-            row["MACD"] > row["MACD_signal"] and
-            row["close"] > row["SAR"]):
+            row["MACD"] > row["MACD_signal"]):  # SAR 已移除
             return "多方"
         elif (row["RSI"] > 50 and
               row["EMA_short"] < row["EMA_long"] and
-              row["MACD"] < row["MACD_signal"] and
-              row["close"] < row["SAR"]):
+              row["MACD"] < row["MACD_signal"]):  # SAR 已移除
             return "空方"
         else:
             return None
