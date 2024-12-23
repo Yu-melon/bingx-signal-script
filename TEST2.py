@@ -1,3 +1,4 @@
+import os
 import ccxt
 import pandas as pd
 import pandas_ta as ta
@@ -8,9 +9,15 @@ import asyncio
 # 初始化 BingX
 def initialize_bingx():
     try:
+        # 讀取環境變數
+        api_key = os.getenv("BINGX_API_KEY")
+        secret_key = os.getenv("BINGX_SECRET_KEY")
+        print(f"讀取的 API Key: {api_key}, Secret Key: {secret_key[:4]}****")
+
+        # 初始化 BingX
         exchange = ccxt.bingx({
-            "apiKey": "YOUR_API_KEY",  # 替換為 BingX API Key
-            "secret": "YOUR_SECRET_KEY"   # 替換為 BingX Secret
+            "apiKey": api_key,
+            "secret": secret_key,
         })
         exchange.load_markets()
         print("BingX 交易所連線成功！")
@@ -23,7 +30,7 @@ def initialize_bingx():
 def fetch_data(exchange, symbol, timeframe="1h"):
     try:
         print(f"正在抓取 {symbol} 的 {timeframe} K 線數據...")
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe, limit=50)  # 確保數據足夠
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe, limit=50)
         df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
         return df
@@ -34,10 +41,9 @@ def fetch_data(exchange, symbol, timeframe="1h"):
 # 計算技術指標
 def calculate_indicators(df):
     try:
-        if len(df) < 50:  # 確保數據足夠
+        if len(df) < 50:
             print("數據不足，無法計算技術指標。")
             return None
-
         df["RSI"] = ta.rsi(df["close"], length=7)
         df["EMA_short"] = ta.ema(df["close"], length=5)
         df["EMA_long"] = ta.ema(df["close"], length=15)
@@ -45,6 +51,7 @@ def calculate_indicators(df):
         df["MACD"] = macd["MACD_12_26_9"]
         df["MACD_signal"] = macd["MACDs_12_26_9"]
         df["MACD_hist"] = macd["MACDh_12_26_9"]
+        df["SAR"] = ta.sar(df["high"], df["low"], acceleration=0.02, maximum=0.2)
         return df
     except Exception as e:
         print(f"計算技術指標失敗: {e}")
@@ -53,26 +60,26 @@ def calculate_indicators(df):
 # 信號生成邏輯
 def generate_signal(row):
     try:
-        # 多方信號條件
         if (row["RSI"] < 50 and
             row["EMA_short"] > row["EMA_long"] and
-            row["MACD"] > row["MACD_signal"]):
+            row["MACD"] > row["MACD_signal"] and
+            row["close"] > row["SAR"]):
             return "多方"
-        # 空方信號條件
         elif (row["RSI"] > 50 and
               row["EMA_short"] < row["EMA_long"] and
-              row["MACD"] < row["MACD_signal"]):
+              row["MACD"] < row["MACD_signal"] and
+              row["close"] < row["SAR"]):
             return "空方"
         else:
-            return None  # 無信號
+            return None
     except Exception as e:
         print(f"生成信號失敗: {e}")
         return None
 
 # 發送訊息到 Telegram（異步）
 async def send_to_telegram(message):
-    TELEGRAM_API_TOKEN = "YOUR_TELEGRAM_API_TOKEN"  # 替換為 Telegram Bot API Token
-    TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"      # 替換為 Telegram Chat ID
+    TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
     bot = Bot(token=TELEGRAM_API_TOKEN)
     try:
         await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
@@ -83,38 +90,29 @@ async def send_to_telegram(message):
 # 主程式
 def main():
     print("開始運行程式...")
+    print("測試 Heroku 環境變數讀取...")
+    print(f"BINGX_API_KEY: {os.getenv('BINGX_API_KEY')}")
+    print(f"BINGX_SECRET_KEY: {os.getenv('BINGX_SECRET_KEY')[:4]}****")
+    print(f"TELEGRAM_API_TOKEN: {os.getenv('TELEGRAM_BOT_TOKEN')}")
+    print(f"TELEGRAM_CHAT_ID: {os.getenv('TELEGRAM_CHAT_ID')}")
+
+    # 初始化 BingX
     exchange = initialize_bingx()
     if not exchange:
         print("BingX 初始化失敗，請檢查 API 配置或網路連線。")
         return
 
-    # 獲取所有交易對
     symbols = [symbol for symbol in exchange.symbols if "/USDT" in symbol]
-
-    # 分類結果
-    results = {"多方": [], "空方": []}
-
-    for symbol in symbols:
-        try:
-            # 抓取當前 1 小時 K 線數據
-            df = fetch_data(exchange, symbol, timeframe="1h")
+    for symbol in symbols[:5]:  # 測試抓取前 5 個交易對
+        df = fetch_data(exchange, symbol)
+        if df is not None:
+            df = calculate_indicators(df)
             if df is not None:
-                df = calculate_indicators(df)
-                if df is not None:
-                    latest = df.iloc[-1]
-                    signal = generate_signal(latest)
-                    if signal:
-                        results[signal].append(f"交易對: {symbol}, 收盤價: {latest['close']}, RSI: {latest['RSI']}")
-        except Exception as e:
-            print(f"處理 {symbol} 時出現錯誤: {e}")
-
-    # 格式化結果
-    message = "合約信號結果：\n"
-    for key, value in results.items():
-        message += f"\n{key} 信號:\n" + "\n".join(value)
-
-    # 發送到 Telegram
-    asyncio.run(send_to_telegram(message))
+                print(f"成功處理 {symbol} 的技術指標！")
+    
+    # 測試 Telegram
+    test_message = "測試訊息：BingX 初始化成功，Telegram 測試開始。"
+    asyncio.run(send_to_telegram(test_message))
 
 if __name__ == "__main__":
     main()
