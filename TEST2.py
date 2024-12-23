@@ -73,7 +73,6 @@ def generate_signal(row):
 
 # 格式化結果
 def format_results(results):
-        messages = []
     message = ""
     for signal_type, entries in results.items():
         message += f"\n{signal_type} 信號:\n"
