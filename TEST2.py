@@ -73,11 +73,12 @@ def generate_signal(row):
 
 # 格式化結果
 def format_results(results):
+    messages = []
     message = ""
     for signal_type, entries in results.items():
         message += f"\n{signal_type} 信號:\n"
         for entry in entries:
-            message += (
+            entry_msg = (
                 f"交易對: {entry['交易對']}\n"
                 "------------------------\n"
                 f"RSI: {entry['RSI']}\n"
@@ -85,16 +86,17 @@ def format_results(results):
                 f"EMA 長期: {entry['EMA_long']}\n"
                 f"MACD: {entry['MACD']}\n"
                 f"MACD 信號線: {entry['MACD_signal']}\n"
+                f"SAR: {entry['SAR']}\n"
                 f"收盤價: {entry['close']}\n"
                 "------------------------\n"
             )
-                        if len(message) + len(entry_msg) > 4000:  # Telegram 每次訊息最大限制 4096 字符
+            if len(message) + len(entry_msg) > 4096:  # Telegram 每次訊息最大限制 4096 字符
                 messages.append(message)
                 message = entry_msg
             else:
                 message += entry_msg
-                    messages.append(message)  # 添加最後一段訊息
-    return message
+    messages.append(message)  # 添加最後一段訊息
+    return messages
 
 
 # 發送訊息到 Telegram（異步）
