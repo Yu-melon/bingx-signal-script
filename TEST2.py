@@ -112,11 +112,12 @@ def get_filter_parameters():
 
 
 # 發送訊息到 Telegram（異步）
-async def send_to_telegram(message):
+async def send_to_telegram(messages):
     TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")  # 替換為 Telegram Bot API Token
     TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")      # 替換為 Telegram Chat ID
     bot = Bot(token=TELEGRAM_API_TOKEN)
     try:
+        for message in messages:
         await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
         print("訊息已成功發送至 Telegram。")
     except Exception as e:
@@ -168,7 +169,7 @@ def main():
     contract_messages[-1] += "\n\n" + get_filter_parameters()
 
         # 發送到 Telegram
-        asyncio.run(send_to_telegram(contract_message))
+        asyncio.run(send_to_telegram(contract_messages))
 
 if __name__ == "__main__":
     main()
