@@ -71,44 +71,25 @@ def generate_signal(row):
         print(f"生成信號失敗: {e}")
         return None
 
-# 格式化結果
-def format_results(results):
-    messages = []
-    message = ""
-    for signal_type, entries in results.items():
-        message += f"\n{signal_type} 信號:\n"
-        for entry in entries:
-            entry_msg = (
-                f"交易對: {entry['交易對']}\n"
-                "------------------------\n"
-                f"RSI: {entry['RSI']}\n"
-                f"EMA 短期: {entry['EMA_short']}\n"
-                f"EMA 長期: {entry['EMA_long']}\n"
-                f"MACD: {entry['MACD']}\n"
-                f"MACD 信號線: {entry['MACD_signal']}\n"
-                f"收盤價: {entry['close']}\n"
-                "------------------------\n"
-            )
-            if len(message) + len(entry_msg) > 4096:  # Telegram 每次訊息最大限制 4096 字符
-                messages.append(message)
-                message = entry_msg
-            else:
-                message += entry_msg
-    messages.append(message)  # 添加最後一段訊息
-    return messages
+# 分段發送訊息
+def split_message(message, max_length=4096):
+    return [message[i:i+max_length] for i in range(0, len(message), max_length)]
 
-# 備註篩選條件參數
-def get_filter_parameters():
-    parameters = """
-    篩選條件參數：
-    - RSI 時間週期: 7
-    - EMA 短期: 5
-    - EMA 長期: 15
-    - MACD 快線: 12
-    - MACD 慢線: 26
-    - MACD 信號線: 9
-    """
-    return parameters.strip()
+# 發送訊息到 Telegram（異步）
+async def send_to_telegram(message):
+    TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+    bot = Bot(token=TELEGRAM_API_TOKEN)
+    try:
+        messages = split_message(message)
+        for part in messages:
+            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=part)
+        print("訊息已成功發送至 Telegram。")
+    except Exception as e:
+        print(f"Telegram 傳送失敗: {e}")
+
+
+
 
 
 # 發送訊息到 Telegram（異步）
@@ -162,11 +143,31 @@ def main():
                             "close": latest["close"],
                         })
 
-    # 格式化結果
-   contract_messages = "合約信號（所有結果）：\n" + format_results(contract_results)
+    # 格式化訊息
+    message = "合約信號（所有結果）：\n\n"
+    for signal_type, entries in results.items():
+        message += f"{signal_type} 信號:\n\n"
+        for entry in entries:
+            message += (
+                f"交易對: {entry['symbol']}\n"
+                f"------------------------\n"
+                f"RSI: {entry['RSI']:.2f}\n"
+                f"EMA 短期: {entry['EMA_short']:.2f}\n"
+                f"EMA 長期: {entry['EMA_long']:.2f}\n"
+                f"MACD: {entry['MACD']:.2f}\n"
+                f"MACD 信號線: {entry['MACD_signal']:.2f}\n"
+                f"收盤價: {entry['close']:.2f}\n"
+                f"------------------------\n"
+            )
 
-    # 加入篩選條件參數備註
-    contract_messages[-1] += "\n\n" + get_filter_parameters()
+    message += "\n篩選條件參數：\n"
+    message += (
+        "    - RSI 時間週期: 7\n"
+        "    - EMA 短期: 5\n"
+        "    - EMA 長期: 15\n"
+        "    - MACD 快線: 12\n"
+        "    - MACD 慢線: 26\n"
+        "    - MACD 信號線: 9\n"
 
         # 發送到 Telegram
         asyncio.run(send_to_telegram(contract_messages))
