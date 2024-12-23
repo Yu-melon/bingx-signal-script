@@ -71,17 +71,16 @@ def generate_signal(row):
         print(f"生成信號失敗: {e}")
         return None
 
+
 # 格式化結果
 def format_results(results):
     message = ""
     for signal_type, entries in results.items():
-        message += f"
-{signal_type} 信號:
-"
+        message += f"\n{signal_type} 信號:\n"  # 修正為正確的換行符號拼接
         for entry in entries:
-            message += f"交易對: {entry['交易對']}
-"
+            message += f"交易對: {entry['交易對']}\n"  # 修正為正確的換行符號拼接
     return message
+
 
 # 發送訊息到 Telegram（異步）
 async def send_to_telegram(message):
