@@ -10,8 +10,8 @@ import time
 def initialize_bingx():
     try:
         exchange = ccxt.bingx({
-            api_key = os.getenv("BINGX_API_KEY")
-            secret_key = os.getenv("BINGX_SECRET_KEY")
+            "apiKey": os.getenv("BINGX_API_KEY"),
+            "secret": os.getenv("BINGX_SECRET_KEY")
         })
         exchange.load_markets()
         print("BingX 交易所連線成功！")
