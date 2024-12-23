@@ -86,7 +86,6 @@ def format_results(results):
                 f"EMA 長期: {entry['EMA_long']}\n"
                 f"MACD: {entry['MACD']}\n"
                 f"MACD 信號線: {entry['MACD_signal']}\n"
-                f"SAR: {entry['SAR']}\n"
                 f"收盤價: {entry['close']}\n"
                 "------------------------\n"
             )
