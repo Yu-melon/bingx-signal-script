@@ -1,1 +1,1 @@
-worker:python3 TEST2.py
+worker:python3 TG.py
