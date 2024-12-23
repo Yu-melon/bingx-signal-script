@@ -5,7 +5,6 @@ import pandas_ta as ta
 from datetime import datetime
 from telegram import Bot
 import asyncio
-import time
 
 # 初始化 BingX
 def initialize_bingx():
@@ -71,16 +70,14 @@ def generate_signal(row):
         print(f"生成信號失敗: {e}")
         return None
 
-
 # 格式化結果
 def format_results(results):
     message = ""
     for signal_type, entries in results.items():
-        message += f"\n{signal_type} 信號:\n"  # 修正為正確的換行符號拼接
+        message += f"\n{signal_type} 信號:\n"
         for entry in entries:
-            message += f"交易對: {entry['交易對']}\n"  # 修正為正確的換行符號拼接
+            message += f"{entry['交易對']}\n"
     return message
-
 
 # 發送訊息到 Telegram（異步）
 async def send_to_telegram(message):
@@ -98,40 +95,39 @@ async def send_to_telegram(message):
 
 # 主程式
 def main():
-    while True:
-        print("開始運行程式...")
-        exchange = initialize_bingx()
-        if not exchange:
-            print("BingX 初始化失敗，請檢查 API 配置或網路連線。")
-            return
+    print("開始運行程式...")
+    exchange = initialize_bingx()
+    if not exchange:
+        print("BingX 初始化失敗，請檢查 API 配置或網路連線。")
+        return
 
-        # 獲取所有交易對
-        symbols = [symbol for symbol in exchange.symbols if "/USDT" in symbol]
+    # 獲取所有交易對
+    symbols = [symbol for symbol in exchange.symbols if "/USDT" in symbol]
 
-        # 分類結果
-        contract_results = {"多方": [], "空方": []}
+    # 分類結果
+    contract_results = {"多方": [], "空方": []}
 
-        for symbol in symbols:
-            market_type = exchange.market(symbol).get("type", "spot")  # 確認交易對類型
-            if market_type != "swap":  # 只處理合約
-                continue
+    for symbol in symbols:
+        market_type = exchange.market(symbol).get("type", "spot")  # 確認交易對類型
+        if market_type != "swap":  # 只處理合約
+            continue
 
-            # 抓取當前 1 小時 K 線數據
-            df = fetch_data(exchange, symbol, timeframe="1h")
-            if df is not None and len(df) > 0:
-                # 計算技術指標
-                df = calculate_indicators(df)
-                if df is not None:
-                    latest = df.iloc[-1]
-                    signal = generate_signal(latest)
-                    if signal:
-                        contract_results[signal].append({"交易對": symbol})
+        # 抓取當前 1 小時 K 線數據
+        df = fetch_data(exchange, symbol, timeframe="1h")
+        if df is not None and len(df) > 0:
+            # 計算技術指標
+            df = calculate_indicators(df)
+            if df is not None:
+                latest = df.iloc[-1]
+                signal = generate_signal(latest)
+                if signal:
+                    contract_results[signal].append({"交易對": symbol})
 
-        # 格式化結果
-        contract_message = "合約信號（所有結果）：\n" + format_results(contract_results)
+    # 格式化結果
+    contract_message = "合約信號（所有結果）：\n" + format_results(contract_results)
 
-        # 發送到 Telegram
-        asyncio.run(send_to_telegram(contract_message))
+    # 發送到 Telegram
+    asyncio.run(send_to_telegram(contract_message))
 
 if __name__ == "__main__":
     main()
