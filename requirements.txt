@@ -2,5 +2,5 @@ pandas-ta==0.3.14b0
 pandas==1.5.3
 ccxt
 python-telegram-bot==20.3
-talib==0.4.0
 flask==2.3.2
+TA-Lib
