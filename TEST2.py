@@ -9,8 +9,8 @@ import asyncio
 def initialize_bingx():
     try:
         exchange = ccxt.bingx({
-            "apiKey": "YOUR_API_KEY",  # 替換為 BingX API Key
-            "secret": "YOUR_SECRET_KEY"   # 替換為 BingX Secret
+            "apiKey": "BINGX_API_KEY",  # 替換為 BingX API Key
+            "secret": "BINGX_SECRET_KEY"   # 替換為 BingX Secret
         })
         exchange.load_markets()
         print("BingX 交易所連線成功！")
