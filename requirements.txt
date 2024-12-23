@@ -2,4 +2,5 @@ pandas-ta
 pandas
 ccxt
 python-telegram-bot
+talib
 flask
