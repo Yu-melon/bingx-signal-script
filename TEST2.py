@@ -97,6 +97,19 @@ def format_results(results):
     messages.append(message)  # 添加最後一段訊息
     return messages
 
+# 備註篩選條件參數
+def get_filter_parameters():
+    parameters = """
+    篩選條件參數：
+    - RSI 時間週期: 7
+    - EMA 短期: 5
+    - EMA 長期: 15
+    - MACD 快線: 12
+    - MACD 慢線: 26
+    - MACD 信號線: 9
+    """
+    return parameters.strip()
+
 
 # 發送訊息到 Telegram（異步）
 async def send_to_telegram(message):
@@ -148,8 +161,11 @@ def main():
                             "close": latest["close"],
                         })
 
-        # 格式化結果
-        contract_message = "合約信號（所有結果）：\n" + format_results(contract_results)
+    # 格式化結果
+   contract_messages = "合約信號（所有結果）：\n" + format_results(contract_results)
+
+    # 加入篩選條件參數備註
+    contract_messages[-1] += "\n\n" + get_filter_parameters()
 
         # 發送到 Telegram
         asyncio.run(send_to_telegram(contract_message))
