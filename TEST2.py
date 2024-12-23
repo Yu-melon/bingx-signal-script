@@ -108,8 +108,8 @@ def get_filter_parameters():
 
 # 發送訊息到 Telegram（異步）
 async def send_to_telegram(message):
-    TELEGRAM_API_TOKEN = "YOUR_TELEGRAM_API_TOKEN"  # 替換為 Telegram Bot API Token
-    TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"      # 替換為 Telegram Chat ID
+    TELEGRAM_API_TOKEN = "TELEGRAM_BOT_TOKEN"  # 替換為 Telegram Bot API Token
+    TELEGRAM_CHAT_ID = "TELEGRAM_CHAT_ID"      # 替換為 Telegram Chat ID
     bot = Bot(token=TELEGRAM_API_TOKEN)
     try:
         await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
