@@ -1,7 +1,6 @@
-
-pandas-ta
-pandas
-ccxt
-python-telegram-bot
-talib
-flask
+pandas-ta==0.3.14b0
+pandas==1.5.3
+ccxt==3.0.28
+python-telegram-bot==20.3
+talib==0.4.0
+flask==2.3.2
