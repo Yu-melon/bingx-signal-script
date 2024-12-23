@@ -1,7 +1,7 @@
 import os
 import ccxt
 import talib
-import pandas as pd
+import pandas_ta as ta
 from datetime import datetime, timedelta
 from telegram import Bot
 import asyncio
