@@ -84,7 +84,7 @@ def format_results(results):
 
 # 發送訊息到 Telegram（異步）
 async def send_to_telegram(message):
-    TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
+    TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
     TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
     bot = Bot(token=TELEGRAM_API_TOKEN)
     try:
