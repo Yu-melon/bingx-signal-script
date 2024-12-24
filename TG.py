@@ -92,7 +92,7 @@ def format_results(results):
                 f"MACD 信號線: {entry['MACD_signal']}\n"
                 f"SAR: {entry['SAR']}\n"
                 f"收盤價: {entry['close']}\n"
-                "------------------------\n"
+                "------------------------\n")
     return message
 
 # 發送訊息到 Telegram（異步）
