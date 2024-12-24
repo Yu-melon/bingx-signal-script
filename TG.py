@@ -38,65 +38,24 @@ def calculate_indicators(df):
         if len(df) < 50:  # 確保數據足夠
             print("數據不足，無法計算技術指標。")
             return None
-        df["RSI"] = ta.rsi(df["close"], length=7)
-        df["EMA_short"] = ta.ema(df["close"], length=5)
-        df["EMA_long"] = ta.ema(df["close"], length=15)
-        macd = ta.macd(df["close"], fast=12, slow=26, signal=9)
-        df["MACD"] = macd["MACD_12_26_9"]
-        df["MACD_signal"] = macd["MACDs_12_26_9"]
-        df["MACD_hist"] = macd["MACDh_12_26_9"]
-
-        # 確保列名正確
-        required_columns = ["high", "low", "close"]
-        for col in required_columns:
-            if col not in df.columns:
-                raise ValueError(f"缺少必要的列: {col}")
 
         # 計算 SAR
         psar = ta.psar(df["high"], df["low"], df["close"], af=0.02, max_af=0.2)
-        # 根據返回的列名稱進行修改
         if "PSAR" in psar.columns:
             df["SAR"] = psar["PSAR"]
         elif "PSARr_0.02_0.2" in psar.columns:
             df["SAR"] = psar["PSARr_0.02_0.2"]
         else:
             raise ValueError("無法找到 PSAR 列，請檢查 pandas-ta 的版本和返回結果")
-        
-        return df
+
+        # 取得最新 SAR 數值
+        latest_sar = df.iloc[-1]["SAR"]
+        latest_close = df.iloc[-1]["close"]
+
+        return df, latest_close, latest_sar
     except Exception as e:
         print(f"計算技術指標失敗: {e}")
-        return None
-
-# 信號生成邏輯
-def generate_signal(row):
-    try:
-        # 多方信號條件
-        if (row["RSI"] < 50 and
-            row["EMA_short"] > row["EMA_long"] and
-            row["MACD"] > row["MACD_signal"] and
-            row["close"] > row["SAR"]):  # SAR 支持多方
-            return "多方"
-        # 空方信號條件
-        elif (row["RSI"] > 50 and
-              row["EMA_short"] < row["EMA_long"] and
-              row["MACD"] < row["MACD_signal"] and
-              row["close"] < row["SAR"]):  # SAR 支持空方
-            return "空方"
-        # 其他信號（可擴展）
-        else:
-            return None  # 無信號
-    except Exception as e:
-        print(f"生成信號失敗: {e}")
-        return None
-
-# 格式化結果
-def format_results(results):
-    message = ""
-    for signal_type, entries in results.items():
-        message += f"\n{signal_type} 信號:\n"
-        for entry in entries:
-            message += f"{entry['交易對']}\n"
-    return message
+        return None, None, None
 
 # 發送訊息到 Telegram（異步）
 async def send_to_telegram(message):
@@ -123,9 +82,6 @@ def main():
     # 獲取所有交易對
     symbols = [symbol for symbol in exchange.symbols if "/USDT" in symbol]
 
-    # 分類結果
-    contract_results = {"多方": [], "空方": []}
-
     for symbol in symbols:
         market_type = exchange.market(symbol).get("type", "spot")  # 確認交易對類型
         if market_type != "swap":  # 只處理合約
@@ -135,18 +91,11 @@ def main():
         df = fetch_data(exchange, symbol, timeframe="1h")
         if df is not None and len(df) > 0:
             # 計算技術指標
-            df = calculate_indicators(df)
+            df, latest_close, latest_sar = calculate_indicators(df)
             if df is not None:
-                latest = df.iloc[-1]
-                signal = generate_signal(latest)
-                if signal:
-                    contract_results[signal].append({"交易對": symbol})
-
-    # 格式化結果
-    contract_message = "合約信號（所有結果）：\n" + format_results(contract_results)
-
-    # 發送到 Telegram
-    asyncio.run(send_to_telegram(contract_message))
+                # 傳送 SAR 數值到 Telegram
+                message = f"交易對: {symbol}\n最新收盤價: {latest_close}\n最新 SAR 值: {latest_sar}"
+                asyncio.run(send_to_telegram(message))
 
 if __name__ == "__main__":
     main()
