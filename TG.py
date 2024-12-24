@@ -1,10 +1,11 @@
 import os
 import ccxt
 import pandas as pd
+import pandas_ta as ta
 from datetime import datetime
 from telegram import Bot
 import asyncio
-from sar_calculator import calculate_sar  # 引入 SAR 函數
+from sar_calculator import calculate_sar  # 引用自建的 SAR 計算函數
 
 # 初始化 BingX
 def initialize_bingx():
@@ -38,19 +39,15 @@ def calculate_indicators(df):
         if len(df) < 50:  # 確保數據足夠
             print("數據不足，無法計算技術指標。")
             return None
-        # 計算 RSI
-        df["RSI"] = df["close"].rolling(window=7).apply(lambda x: 100 - (100 / (1 + (x.diff(1).clip(lower=0).sum() / -x.diff(1).clip(upper=0).sum()))), raw=True)
-        
-        # 計算 EMA
-        df["EMA_short"] = df["close"].ewm(span=5, adjust=False).mean()
-        df["EMA_long"] = df["close"].ewm(span=15, adjust=False).mean()
+        df["RSI"] = ta.rsi(df["close"], length=7)
+        df["EMA_short"] = ta.ema(df["close"], length=5)
+        df["EMA_long"] = ta.ema(df["close"], length=15)
+        macd = ta.macd(df["close"], fast=12, slow=26, signal=9)
+        df["MACD"] = macd["MACD_12_26_9"]
+        df["MACD_signal"] = macd["MACDs_12_26_9"]
+        df["MACD_hist"] = macd["MACDh_12_26_9"]
 
-        # 計算 MACD
-        df["MACD"] = df["close"].ewm(span=12, adjust=False).mean() - df["close"].ewm(span=26, adjust=False).mean()
-        df["MACD_signal"] = df["MACD"].ewm(span=9, adjust=False).mean()
-        df["MACD_hist"] = df["MACD"] - df["MACD_signal"]
-
-        # 計算 SAR
+        # 使用自建 SAR 計算函數
         df["SAR"] = calculate_sar(df["high"].values, df["low"].values, acceleration=0.02, maximum=0.2)
 
         return df
@@ -95,6 +92,7 @@ async def send_to_telegram(message):
     TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
     bot = Bot(token=TELEGRAM_API_TOKEN)
     try:
+        # 將訊息分段以避免超過 Telegram 的字符限制
         max_length = 4096  # Telegram 單條訊息最大字符數
         for i in range(0, len(message), max_length):
             await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message[i:i+max_length])
