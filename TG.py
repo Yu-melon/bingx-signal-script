@@ -63,13 +63,13 @@ def generate_signal(row):
             row["EMA_short"] > row["EMA_long"] and
             row["MACD"] > row["MACD_signal"] and
             row["close"] > row["SAR"]):  # SAR 支持多方
-            return "多方", row["SAR"]
+            return "多方"
         # 空方信號條件
         elif (row["RSI"] > 50 and
               row["EMA_short"] < row["EMA_long"] and
               row["MACD"] < row["MACD_signal"] and
               row["close"] < row["SAR"]):  # SAR 支持空方
-            return "空方", row["SAR"]
+            return "空方"
         # 其他信號（可擴展）
         else:
             return None, None  # 無信號
