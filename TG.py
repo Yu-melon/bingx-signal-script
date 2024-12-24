@@ -83,7 +83,16 @@ def format_results(results):
     for signal_type, entries in results.items():
         message += f"\n{signal_type} 信號:\n"
         for entry in entries:
-            message += f"{entry['交易對']} | SAR: {entry['SAR']:.4f}\n"
+            message += (
+                f"交易對: {entry['交易對']}\n"
+                f"RSI: {entry['RSI']}\n"
+                f"EMA 短期: {entry['EMA_short']}\n"
+                f"EMA 長期: {entry['EMA_long']}\n"
+                f"MACD: {entry['MACD']}\n"
+                f"MACD 信號線: {entry['MACD_signal']}\n"
+                f"SAR: {entry['SAR']}\n"
+                f"收盤價: {entry['close']}\n"
+                "------------------------\n"
     return message
 
 # 發送訊息到 Telegram（異步）
