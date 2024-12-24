@@ -135,7 +135,7 @@ def main():
             df = calculate_indicators(df)
             if df is not None:
                 latest = df.iloc[-1]
-                signal, sar_value = generate_signal(latest)
+                signal = generate_signal(latest)
                 if signal in contract_results:
                     contract_results[signal].append({
                             "交易對": symbol,
