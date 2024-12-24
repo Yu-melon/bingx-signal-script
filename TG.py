@@ -45,6 +45,12 @@ def calculate_indicators(df):
         df["MACD"] = macd["MACD_12_26_9"]
         df["MACD_signal"] = macd["MACDs_12_26_9"]
         df["MACD_hist"] = macd["MACDh_12_26_9"]
+
+        # 計算 SAR
+        psar = ta.psar(df["high"], df["low"], df["close"], af=0.02, max_af=0.2)
+        df["SAR"] = psar["PSARr_0.02_0.2"]
+        df["SAR_dir"] = psar["PSARf_0.02_0.2"]  # 方向（多/空）
+        
         return df
     except Exception as e:
         print(f"計算技術指標失敗: {e}")
@@ -56,12 +62,14 @@ def generate_signal(row):
         # 多方信號條件
         if (row["RSI"] < 50 and
             row["EMA_short"] > row["EMA_long"] and
-            row["MACD"] > row["MACD_signal"]):
+            row["MACD"] > row["MACD_signal"] and
+            row["close"] > row["SAR"]):  # SAR 支持多方
             return "多方"
         # 空方信號條件
         elif (row["RSI"] > 50 and
               row["EMA_short"] < row["EMA_long"] and
-              row["MACD"] < row["MACD_signal"]):
+              row["MACD"] < row["MACD_signal"] and
+              row["close"] < row["SAR"]):  # SAR 支持空方
             return "空方"
         # 其他信號（可擴展）
         else:
