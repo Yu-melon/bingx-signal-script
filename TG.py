@@ -46,10 +46,21 @@ def calculate_indicators(df):
         df["MACD_signal"] = macd["MACDs_12_26_9"]
         df["MACD_hist"] = macd["MACDh_12_26_9"]
 
+        # 確保列名正確
+        required_columns = ["high", "low", "close"]
+        for col in required_columns:
+            if col not in df.columns:
+                raise ValueError(f"缺少必要的列: {col}")
+
         # 計算 SAR
         psar = ta.psar(df["high"], df["low"], df["close"], af=0.02, max_af=0.2)
-        df["SAR"] = psar["PSARr_0.02_0.2"]
-        df["SAR_dir"] = psar["PSARf_0.02_0.2"]  # 方向（多/空）
+        # 根據返回的列名稱進行修改
+        if "PSAR" in psar.columns:
+            df["SAR"] = psar["PSAR"]
+        elif "PSARr_0.02_0.2" in psar.columns:
+            df["SAR"] = psar["PSARr_0.02_0.2"]
+        else:
+            raise ValueError("無法找到 PSAR 列，請檢查 pandas-ta 的版本和返回結果")
         
         return df
     except Exception as e:
