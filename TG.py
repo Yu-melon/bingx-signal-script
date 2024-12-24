@@ -136,17 +136,17 @@ def main():
             if df is not None:
                 latest = df.iloc[-1]
                 signal, sar_value = generate_signal(latest)
-            if signal in contract_results:  # 確認 signal 是合法鍵
-                contract_results[signal].append({
-                    "交易對": symbol,
-                    "RSI": latest["RSI"],
-                    "EMA_short": latest["EMA_short"],
-                    "EMA_long": latest["EMA_long"],
-                    "MACD": latest["MACD"],
-                    "MACD_signal": latest["MACD_signal"],
-                    "SAR": latest["SAR"],
-                    "close": latest["close"],
-                            })
+                if signal:
+                    contract_results[signal].append({
+                            "交易對": symbol,
+                            "RSI": latest["RSI"],
+                            "EMA_short": latest["EMA_short"],
+                            "EMA_long": latest["EMA_long"],
+                            "MACD": latest["MACD"],
+                            "MACD_signal": latest["MACD_signal"],
+                            "SAR": latest["SAR"],
+                            "close": latest["close"],
+                        })
 
     # 格式化結果
     contract_message = "合約信號（所有結果）：\n" + format_results(contract_results)
