@@ -78,14 +78,15 @@ def generate_signal(row):
 
 # 格式化結果
 def format_results(results):
-    message = """"
+    message = ""
     for signal_type, entries in results.items():
         message += f"\n{signal_type} 信號:\n"
         for entry in entries:
-            message += (
-                "------------------------\n")
-                f" {entry['交易對']} | 收盤價:{entry['close']}\n"
-                "------------------------\n")
+        message += (
+                "------------------------\\n"
+                f" {entry['交易對']} | 收盤價:{entry['close']}\\n"
+                "------------------------\\n"
+                    )
     return message
 
 # 備註
