@@ -78,16 +78,23 @@ def generate_signal(row):
 
 # 格式化結果
 def format_results(results):
-    message = ""
+    message = "【碰幣專屬AI快篩】\n合約信號（所有結果）：\n"
+
     for signal_type, entries in results.items():
         message += f"\n{signal_type} 信號:\n"
-        for entry in entries:
-            message += (
-                "------------------------\\n"
-                f" {entry['交易對']} | 收盤價:{entry['close']}\\n"
-                "------------------------\\n"
-            )
+        if entries:  # 確認該信號類型有結果
+            for entry in entries:
+                message += (
+                    "------------------------\n"
+                    f" {entry['交易對']} | 收盤價:{entry['close']}\n"
+                    "------------------------\n"
+                )
+        else:  # 如果沒有結果
+            message += "暫無信號。\n"
+
+    message += "\n以上內容皆非投資指引。\n不構成投資建議，內容皆為學術筆記研究"
     return message
+
 
 # 備註
 def get_filter_parameters():
@@ -151,7 +158,7 @@ def main():
                         })
 
     # 格式化結果
-    contract_message = "【碰幣專屬AI快篩】\\n合約信號（所有結果）：\\n"+ format_results(contract_results)
+    contract_message = "合約信號（所有結果）：\\n"+ format_results(contract_results)
 
     # 加入篩選條件參數備註
     contract_message += "\n\n" + get_filter_parameters()
