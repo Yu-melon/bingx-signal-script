@@ -78,7 +78,7 @@ def generate_signal(row):
 
 # 格式化結果
 def format_results(results):
-    message = ""【碰幣專屬AI快篩】""
+    message = """"
     for signal_type, entries in results.items():
         message += f"\n{signal_type} 信號:\n"
         for entry in entries:
@@ -149,7 +149,7 @@ def main():
                         })
 
     # 格式化結果
-    contract_message = "合約信號（所有結果）：\n" + format_results(contract_results)
+    contract_message = "【碰幣專屬AI快篩】\\n合約信號（所有結果）：\\n"+ format_results(contract_results)
 
     # 加入篩選條件參數備註
     contract_message += "\n\n" + get_filter_parameters()
