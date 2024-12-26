@@ -60,40 +60,40 @@ def generate_signal(row):
     try:
         # 多方信號條件
         if (row["RSI"] < 50 and
-            row["EMA_short"] > row["EMA_long"] and
             row["MACD"] > row["MACD_signal"] and
-            row["close"] > row["SAR"]):  # SAR 支持多方
+            row["close"] > row["SAR"] and
+            row["EMA_short"] > row["EMA_long"]):
             return "多方"
         # 空方信號條件
         elif (row["RSI"] > 50 and
-              row["EMA_short"] < row["EMA_long"] and
               row["MACD"] < row["MACD_signal"] and
-              row["close"] < row["SAR"]):  # SAR 支持空方
+              row["close"] < row["SAR"] and
+              row["EMA_short"] < row["EMA_long"]):
             return "空方"
-        # 其他信號（可擴展）
         else:
-            return None, None  # 無信號
+            return None
     except Exception as e:
         print(f"生成信號失敗: {e}")
-        return None, None
+        return None
 
 # 格式化結果
 def format_results(results):
-    message = ""
+    message = ""【碰幣專屬AI快篩】""
     for signal_type, entries in results.items():
         message += f"\n{signal_type} 信號:\n"
         for entry in entries:
             message += (
-                f"交易對: {entry['交易對']}\n"
-                f"RSI: {entry['RSI']}\n"
-                f"EMA 短期: {entry['EMA_short']}\n"
-                f"EMA 長期: {entry['EMA_long']}\n"
-                f"MACD: {entry['MACD']}\n"
-                f"MACD 信號線: {entry['MACD_signal']}\n"
-                f"SAR: {entry['SAR']}\n"
-                f"收盤價: {entry['close']}\n"
+                "------------------------\n")
+                f" {entry['交易對']} | 收盤價:{entry['close']}\n"
                 "------------------------\n")
     return message
+
+def get_filter_parameters():
+    parameters = """
+***以上內容皆非投資指引，不構成投資建議，內容皆為筆記學術研究。***
+    """
+    return parameters.strip()
+
 
 # 發送訊息到 Telegram（異步）
 async def send_to_telegram(message):
@@ -150,6 +150,9 @@ def main():
 
     # 格式化結果
     contract_message = "合約信號（所有結果）：\n" + format_results(contract_results)
+
+    # 加入篩選條件參數備註
+    contract_message += "\n\n" + get_filter_parameters()
 
     # 發送到 Telegram
     asyncio.run(send_to_telegram(contract_message))
