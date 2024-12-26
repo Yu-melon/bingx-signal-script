@@ -98,8 +98,8 @@ def format_results(results):
 # 備註
 def get_filter_parameters():
     parameters = """
-以上內容皆非投資指引。不構成投資建議，內容皆為學術筆記研究
-    """
+以上內容皆非投資指引。不構成投資建議，內容皆為學術筆記研究\n
+    """+"""【注意事項】: https://pse.is/6pb2zw"""
     return parameters.strip()
 
 
