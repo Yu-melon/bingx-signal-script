@@ -82,11 +82,11 @@ def format_results(results):
     for signal_type, entries in results.items():
         message += f"\n{signal_type} 信號:\n"
         for entry in entries:
-        message += (
+            message += (
                 "------------------------\\n"
                 f" {entry['交易對']} | 收盤價:{entry['close']}\\n"
                 "------------------------\\n"
-                    )
+            )
     return message
 
 # 備註
